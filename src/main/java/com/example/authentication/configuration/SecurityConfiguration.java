@@ -31,7 +31,6 @@ public class SecurityConfiguration {
             .cors(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(config -> config
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/admin/**").hasAuthority("ADMIN")
                 .anyRequest().authenticated()
             )
             .sessionManagement(sessionManagement -> sessionManagement
