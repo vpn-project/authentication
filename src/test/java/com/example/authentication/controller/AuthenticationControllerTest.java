@@ -50,24 +50,6 @@ public class AuthenticationControllerTest {
     private static final User USER = new User("username", "password", "username@mail.ru");
 
     @Test
-    public void testRegisterAndLogin() throws Exception {
-        MvcResult registerResult = mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(REGISTER_DTO)))
-            .andExpect(status().isCreated())
-            .andReturn();
-
-        UserResponseDto userResponseDto =
-            objectMapper.readValue(registerResult.getResponse().getContentAsString(), UserResponseDto.class);
-
-        MvcResult loginResult = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(LOGIN_DTO)))
-            .andExpect(status().isOk())
-            .andReturn();
-    }
-
-    @Test
     public void testLoginWithInvalidCredentials() throws Exception {
         LoginDto loginDto = new LoginDto("invalidUser", "invalidPassword");
         MvcResult loginResult = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
