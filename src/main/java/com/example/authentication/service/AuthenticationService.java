@@ -1,20 +1,21 @@
 package com.example.authentication.service;
 
-import com.example.authentication.dto.JwtToken;
-import com.example.authentication.dto.LoginDto;
-import com.example.authentication.dto.RegisterDto;
-import com.example.authentication.dto.UserResponseDto;
+import com.example.authentication.dto.*;
 import com.example.authentication.entity.User;
 import com.example.authentication.exception.UsernameOrPasswordException;
 import com.example.authentication.mapper.UserDtoMapper;
 import com.example.authentication.utils.JwtTokensUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +28,9 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokensUtil jwtTokensUtil;
 
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+
     public UserResponseDto register(RegisterDto dto) {
         User user = userDtoMapper.registerDtoToEntity(dto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -36,14 +40,21 @@ public class AuthenticationService {
     public JwtToken login(LoginDto dto) {
         try {
             authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    dto.getUsername(),
-                    dto.getPassword()
-                ));
+                    new UsernamePasswordAuthenticationToken(
+                            dto.getUsername(),
+                            dto.getPassword()
+                    ));
         } catch (BadCredentialsException e) {
             throw new UsernameOrPasswordException();
         }
+
         User user = userService.findByUsername(dto.getUsername());
+        try {
+            kafkaTemplate.send("notification_topic", objectMapper.writeValueAsString(new NotificationDto(user.getUsername(), user.getEmail())));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
         return new JwtToken(jwtTokensUtil.generateToken(user));
     }
 
