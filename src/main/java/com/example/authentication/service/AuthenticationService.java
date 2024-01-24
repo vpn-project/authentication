@@ -50,7 +50,7 @@ public class AuthenticationService {
 
         User user = userService.findByUsername(dto.getUsername());
         try {
-            kafkaTemplate.send("notification_topic",objectMapper.writeValueAsString(new NotificationDto(user.getUsername(), user.getEmail())));
+            kafkaTemplate.send("notification_topic", objectMapper.writeValueAsString(new NotificationDto(user.getUsername(), user.getEmail())));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
