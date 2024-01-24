@@ -1,9 +1,6 @@
 package com.example.authentication.service;
 
-import com.example.authentication.dto.JwtToken;
-import com.example.authentication.dto.LoginDto;
-import com.example.authentication.dto.RegisterDto;
-import com.example.authentication.dto.UserResponseDto;
+import com.example.authentication.dto.*;
 import com.example.authentication.entity.User;
 import com.example.authentication.exception.UsernameOrPasswordException;
 import com.example.authentication.mapper.UserDtoMapper;
@@ -53,7 +50,7 @@ public class AuthenticationService {
 
         User user = userService.findByUsername(dto.getUsername());
         try {
-            kafkaTemplate.send("notification_topic",objectMapper.writeValueAsString("Test message for kafka") );
+            kafkaTemplate.send("notification_topic",objectMapper.writeValueAsString(new NotificationDto(user.getUsername(), user.getEmail())));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
